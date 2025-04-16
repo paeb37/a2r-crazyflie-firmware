@@ -1,1 +1,2 @@
-obj-y += app_tinympc_controller/ 
+obj-y += src/
+obj-y += TinyMPC/src/tinympc/

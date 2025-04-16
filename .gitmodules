@@ -13,3 +13,6 @@
 [submodule "vendor/unity"]
 	path = vendor/unity
 	url = https://github.com/throwtheswitch/unity.git
+[submodule "examples/app_tinympc_controller/TinyMPC"]
+	path = examples/app_tinympc_controller/TinyMPC
+	url = https://github.com/TinyMPC/TinyMPC.git

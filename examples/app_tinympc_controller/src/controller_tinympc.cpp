@@ -26,6 +26,13 @@
  * Currently just wraps the PID controller as a starting point.
  */
 
+#include "Eigen.h"
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -42,31 +49,58 @@
 #include "controller_pid.h"
 #include "param.h"
 
-void controllerOutOfTreeInit() {
-  DEBUG_PRINT("Initializing TinyMPC controller (currently using PID)...\n");
-  controllerPidInit();
+#include "tinympc/admm.hpp"
+#include "tinympc/types.hpp"
+
+// minimal data structures needed, just to call a function
+// the data types are different now!!!!!
+// basically just memset
+static TinyCache cache = TinyCache{};
+static TinySettings settings = TinySettings{};
+static TinyWorkspace workspace = TinyWorkspace{};
+static TinySolver solver = TinySolver{};
+static TinySolution solution = TinySolution{};
+
+void controllerOutOfTreeInit(void) {
+	
+  // Initialize TinyMPC structures to zero or default
+  solver.cache = &cache;
+  solver.settings = &settings;
+  solver.work = &workspace;
+  solver.solution = &solution;
+
+  DEBUG_PRINT("TinyMPC structures initialized\n");
+  controllerPidInit(); // Keep PID for safety
 }
 
-bool controllerOutOfTreeTest() {
+bool controllerOutOfTreeTest(void) {
   return true;
 }
 
 void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, 
                         const sensorData_t *sensors, const state_t *state, 
                         const stabilizerStep_t stabilizerStep) {
-  // For now, just use the PID controller
+  // Example: call the solver (with dummy data for now)
+  solve(&solver);
+  // For now, still use PID for output
   controllerPid(control, setpoint, sensors, state, stabilizerStep);
 }
 
 // Initialize the controller when the app starts
-void appMain() {
+void appMain(void) {
   DEBUG_PRINT("Waiting for activation ...\n");
   
   // Set the controller type to out-of-tree
-  paramVarId_t controllerType = paramGetVarIdFromName("stabilizer", "controller");
+
+  // This is using the up to date method
+  paramVarId_t controllerType = paramGetVarIdFromComplete("stabilizer.controller");
   paramSetInt(controllerType, ControllerTypeOot);
   
   while(1) {
     vTaskDelay(M2T(2000));
   }
-} 
+}
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

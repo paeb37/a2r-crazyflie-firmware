@@ -61,6 +61,9 @@ static TinyWorkspace workspace = TinyWorkspace{};
 static TinySolver solver = TinySolver{};
 static TinySolution solution = TinySolution{};
 
+// now tinyVector, not tiny_VectorNx
+static tinyVector mpc_setpoint;
+
 void controllerOutOfTreeInit(void) {
 	
   // Initialize TinyMPC structures to zero or default
@@ -84,6 +87,10 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint,
   solve(&solver);
   // For now, still use PID for output
   controllerPid(control, setpoint, sensors, state, stabilizerStep);
+
+  if (solver.solution) {
+    mpc_setpoint = solver.solution->x.col(0); // or another column as needed
+  }
 }
 
 // Initialize the controller when the app starts

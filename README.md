@@ -1,38 +1,90 @@
-# Crazyflie Firmware  [![CI](https://github.com/bitcraze/crazyflie-firmware/workflows/CI/badge.svg)](https://github.com/bitcraze/crazyflie-firmware/actions?query=workflow%3ACI)
+# Crazyflie Firmware (A2R)
 
-This project contains the source code for the firmware used in the Crazyflie range of platforms, including the Crazyflie 2.x and the Roadrunner.
+Custom crazyflie firmware to work with crazyswarm2
 
-### Crazyflie 1.0 support
+### Installation (crazyswarm2)
+https://imrclab.github.io/crazyswarm2/installation.html
 
-The 2017.06 release was the last release with Crazyflie 1.0 support. If you want
-to play with the Crazyflie 1.0 and modify the code, please clone this repo and
-branch off from the 2017.06 tag.
+### Running program (tip: use 2 terminal tabs)
 
-## Building and Flashing
-See the [building and flashing instructions](https://github.com/bitcraze/crazyflie-firmware/blob/master/docs/building-and-flashing/build.md) in the github docs folder.
+#### Terminal 1 (ROS):
 
+1. Activate virtual environment:
+```bash
+source /home/brandon-pae/venv/bin/activate
+```
 
-## Official Documentation
+2. Build and run ROS:
+```bash
+cd ~/ros2_ws
 
-Check out the [Bitcraze crazyflie-firmware documentation](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/) on our website.
+source /opt/ros/jazzy/setup.bash
 
-## Generated documentation
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 
-The easiest way to generate the API documentation is to use the [toolbelt](https://github.com/bitcraze/toolbelt)
+. install/local_setup.bash
 
-```tb build-docs```
+ros2 launch crazyflie_examples launch.py script:=hello_world
+```
 
-and to view it in a web page
+To remove cache (delete temp files):
+```bash
+rm -rf build install log
+```
 
-```tb docs```
+#### Terminal 2 (crazyflie firmware):
 
-## Contribute
-Go to the [contribute page](https://www.bitcraze.io/contribute/) on our website to learn more.
+1. Activate virtual environment and navigate to firmware directory:
+```bash
+source /home/brandon-pae/venv/bin/activate
 
-### Test code for contribution
+cd ~/Desktop/brandon/a2r-crazyflie-firmware
+```
 
-To run the tests please have a look at the [unit test documentation](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/development/unit_testing/).
+2. Build and flash firmware:
+```bash
+make defconfig
 
-## License
+cd examples/app_tinympc_controller
 
-The code is licensed under LGPL-3.0
+make clean
+
+make -j$(nproc)  # For Linux
+# OR
+make -j$(sysctl -n hw.ncpu)  # For Mac
+
+make cload
+```
+
+### File Structure:
+
+- `app_tinympc_controller/`
+  - Main folder for the tinympc controller
+  - `src/`
+    - `controller_tinympc.cpp`
+- `TinyMPC/`
+  - `src/tinympc/`
+    - Contains the admm and kbuild file (MUST UPDATE**)
+
+### TinyMPC Submodule Setup
+
+TinyMPC is added as a submodule and must be modified following these instructions:
+
+1. Kbuild file:
+```makefile
+obj-y += admm.o
+obj-y += rho_benchmark.o
+```
+
+2. May need to comment out parts of the `admm.cpp` file to get it to compile
+
+### Next Steps
+
+1. Compare the existing controller implementation:
+   - Current file: `controller_tinympc.cpp`
+   - Reference file: [controller_tinympc.cpp from crazyswarm1](https://github.com/ishaanamahajan/tinympc-crazyflie-firmware/blob/main/examples/controller_tinympc_eigen_task/src/controller_tinympc.cpp)
+
+2. Focus on updating the controller initialization:
+   - Target method: `void controllerOutOfTreeInit(void)`
+   - Gradually add back functionality
+   - Note: Some structs and methods may need to be updated for compatibility
